@@ -17,7 +17,6 @@
 package com.santander.kpv.services.sender;
 
 import com.ibm.jakarta.jms.JMSTextMessage;
-import com.santander.kpv.utils.Constants;
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -42,6 +41,8 @@ public class SendReceivService {
     @Value("${app.queue.name2}")
     public String replyQueue;
 
+    @Value("${app.JMSExpiration}")
+    private long jmsExpiration;
     private final  JmsTemplate myTemplate;
 
     SendReceivService(JmsTemplate myTemplate) {
@@ -55,7 +56,7 @@ public class SendReceivService {
             public Message createMessage(Session session) throws JMSException {
                 Message jmsmsg = session.createTextMessage(msg);
                 jmsmsg.setJMSCorrelationID(UUID.randomUUID().toString());
-                jmsmsg.setJMSExpiration(5 * Constants.SECOND);
+                jmsmsg.setJMSExpiration(jmsExpiration);
                 jmsmsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
                 jmsmsg.setJMSReplyTo(session.createQueue(replyQueue));
                 return jmsmsg;
