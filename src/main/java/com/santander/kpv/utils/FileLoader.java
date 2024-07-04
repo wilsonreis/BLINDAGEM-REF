@@ -17,6 +17,7 @@ public class FileLoader implements ApplicationRunner {
     StringBuilder arquivoLido = new StringBuilder();
 
     String arquivo;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         ClassPathResource resource = new ClassPathResource("file001.txt");
@@ -32,7 +33,7 @@ public class FileLoader implements ApplicationRunner {
     }
 
     @Bean(name = "getXmlFile")
-    public String getXmlFile(){
+    public String getXmlFile() {
         return arquivo;
     }
 }

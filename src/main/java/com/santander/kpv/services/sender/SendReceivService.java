@@ -34,24 +34,21 @@ import java.util.UUID;
 @Service
 public class SendReceivService {
     protected final Log logger = LogFactory.getLog(getClass());
-
+    private final JmsTemplate myTemplateAnt;
     @Value("${app.queue.name1}")
     public String sendQueue;
-
     @Value("${app.queue.name2}")
     public String replyQueue;
-
     @Value("${app.JMSExpiration}")
     private long jmsExpiration;
-    private final  JmsTemplate myTemplate;
 
-    SendReceivService(JmsTemplate myTemplate) {
-        this.myTemplate = myTemplate;
+    SendReceivService(JmsTemplate myTemplateAnt) {
+        this.myTemplateAnt = myTemplateAnt;
     }
 
     public String sendSyncReply(String msg) {
         logger.info("Sending Message with Sync Reply");
-        Object reply = myTemplate.sendAndReceive(sendQueue, new MessageCreator() {
+        Object reply = myTemplateAnt.sendAndReceive(sendQueue, new MessageCreator() {
             @Override
             public Message createMessage(Session session) throws JMSException {
                 Message jmsmsg = session.createTextMessage(msg);

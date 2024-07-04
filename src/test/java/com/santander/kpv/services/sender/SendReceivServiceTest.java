@@ -1,7 +1,9 @@
 package com.santander.kpv.services.sender;
 
 import com.ibm.jakarta.jms.JMSTextMessage;
-import jakarta.jms.*;
+import jakarta.jms.JMSException;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,7 +16,8 @@ import org.springframework.jms.core.MessageCreator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class SendReceivServiceTest {
@@ -44,7 +47,6 @@ class SendReceivServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
-
 
 
     @Test

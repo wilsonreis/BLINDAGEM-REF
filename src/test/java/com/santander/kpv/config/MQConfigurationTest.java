@@ -18,7 +18,7 @@ class MQConfigurationTest {
     private ConnectionFactory connectionFactory;
 
     @InjectMocks
-    private MQConfiguration mqConfiguration;
+    private MQConfigurationOld mqConfiguration;
 
     @Test
     void testMyTemplate() {

@@ -1,35 +1,73 @@
-/*
- * (c) Copyright IBM Corporation 2021, 2023
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.santander.kpv.config;
 
+import com.ibm.mq.jakarta.jms.MQQueueConnectionFactory;
+import com.ibm.msg.client.jakarta.jms.JmsContext;
+import com.ibm.msg.client.jakarta.wmq.common.CommonConstants;
 import jakarta.jms.ConnectionFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import jakarta.jms.JMSContext;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.core.JmsTemplate;
 
 @Configuration
+@EnableJms
+@Slf4j
 public class MQConfiguration {
-    protected final Log logger = LogFactory.getLog(getClass());
 
+    @Value("${ibm.mq.host}")
+    private String mqHostName;
+
+    @Value("${ibm.mq.port}")
+    private int mqPort;
+
+    @Value("${ibm.mq.queueManager}")
+    private String mqQueueManager;
+
+    @Value("${ibm.mq.channel}")
+    private String mqChannel;
+
+    @Bean("mqQueueConnectionFactory")
+    public MQQueueConnectionFactory mqQueueConnectionFactory() {
+        MQQueueConnectionFactory mqQueueConnectionFactory = new MQQueueConnectionFactory();
+        try {
+            mqQueueConnectionFactory.setHostName(this.getMqHostName());
+            mqQueueConnectionFactory.setPort(this.getMqPort());
+            mqQueueConnectionFactory.setQueueManager(this.getMqQueueManager());
+            mqQueueConnectionFactory.setChannel(this.getMqChannel());
+            mqQueueConnectionFactory.setCCSID(1208);
+            mqQueueConnectionFactory.setTransportType(CommonConstants.WMQ_CM_CLIENT);
+            mqQueueConnectionFactory.setStringProperty(CommonConstants.USERID, "admin");
+            mqQueueConnectionFactory.setStringProperty(CommonConstants.PASSWORD, "passw0rd");
+            log.info("Sucesso ao conectar na fila");
+        } catch (Exception e) {
+            log.error("Error ao criar jms connection factory: {}", e.getMessage());
+        }
+        return mqQueueConnectionFactory;
+    }
 
     @Bean("myTemplate")
-    public JmsTemplate myTemplate(ConnectionFactory connectionFactory) {
-        return new JmsTemplate(connectionFactory);
+    public JmsTemplate myTemplate(ConnectionFactory mqQueueConnectionFactory) {
+        JmsTemplate jmsTemplate = new JmsTemplate(mqQueueConnectionFactory);
+        jmsTemplate.setPriority(1);
+        return jmsTemplate;
+    }
+
+    public String getMqHostName() {
+        return mqHostName;
+    }
+
+    public int getMqPort() {
+        return mqPort;
+    }
+
+    public String getMqQueueManager() {
+        return mqQueueManager;
+    }
+
+    public String getMqChannel() {
+        return mqChannel;
     }
 }
