@@ -3,8 +3,11 @@ package com.santander.kpv.config;
 import com.ibm.mq.jakarta.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.jakarta.jms.JmsContext;
 import com.ibm.msg.client.jakarta.wmq.common.CommonConstants;
+import com.santander.kpv.exceptions.MyRuntimeException;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSContext;
+import jakarta.jms.Queue;
+import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +32,22 @@ public class MQConfiguration {
     @Value("${ibm.mq.channel}")
     private String mqChannel;
 
+    @Bean("getSession")
+    public jakarta.jms.Session getSession(MQQueueConnectionFactory mqQueueConnectionFactory){
+        try {
+            return mqQueueConnectionFactory.createConnection().createSession();
+        } catch (Exception e) {
+            throw new MyRuntimeException(e);
+        }
+    }
+    @Bean("getReplyQueue")
+    public jakarta.jms.Queue getReplyQueue(Session getSession){
+        try {
+            return getSession.createQueue("DEV.QUEUE.2");
+        } catch (Exception e) {
+            throw new MyRuntimeException(e);
+        }
+    }
     @Bean("mqQueueConnectionFactory")
     public MQQueueConnectionFactory mqQueueConnectionFactory() {
         MQQueueConnectionFactory mqQueueConnectionFactory = new MQQueueConnectionFactory();

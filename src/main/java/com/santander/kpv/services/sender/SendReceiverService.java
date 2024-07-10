@@ -4,6 +4,7 @@ import com.ibm.jakarta.jms.JMSTextMessage;
 import com.santander.kpv.utils.ExtendedMessageCreatorUtils;
 import jakarta.jms.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
@@ -19,7 +20,7 @@ public class SendReceiverService {
 
             <?xml version="1.0"?>
             <requestMsg>
-            <dse_operationName>SHG1</dse_operationName>
+            <dse_operationName>SFH1</dse_operationName>
             <dse_formattedData>
             <kColl id="entryData">
             <field id="Usuario" value="MQKPVK" />
@@ -54,14 +55,15 @@ public class SendReceiverService {
     @Value("${ibm.mq.jmsExpiration}")
     protected long jmsExpiration;
 
-
+    @Autowired
+    protected Queue getReplyQueue;
     SendReceiverService(JmsTemplate myTemplate) {
         this.myTemplate = myTemplate;
     }
     public String getMensagem(String cpf) {
         return STRING_SFH8.replaceFirst("777.777.777-77", cpf);
     }
-
+/*
     public String sendSyncReply(String msg) {
         log.info("Sending Message with sendSyncRepl [{}]", msg);
         try {
@@ -71,7 +73,8 @@ public class SendReceiverService {
             return e.getMessage();
         }
     }
-
+*/
+    /*
     private String getMessage(String msg) {
         log.info("mensagem enviada [{}]", msg);
         Object replay = myTemplate.sendAndReceive(
@@ -104,8 +107,8 @@ public class SendReceiverService {
         }
 
     }
-
-
+*/
+/*
     public String getMensagemLista(String cpf) {
         return STRING_SFH1.replaceFirst("99999990932", cpf);
     }
@@ -117,7 +120,7 @@ public class SendReceiverService {
             return e.getMessage();
         }
     }
-
+*/
 
     // novidades
 
@@ -152,9 +155,9 @@ public class SendReceiverService {
         log.info("sendAndReceiveTextMessage : chegou 2.1");
         Message requestMessage = this.sendTextMessage(msg);
         log.info("sendAndReceiveTextMessage : chegou 2.2");
-        String selector = requestMessage.getJMSCorrelationID();
-        log.info("sendAndReceiveTextMessage-getJMSCorrelationID : chegou 2.3 [{}] ", selector);
-        return this.receiveTextMessage(selector);
+        String jmsCorrelationID = requestMessage.getJMSCorrelationID();
+        log.info("sendAndReceiveTextMessage-getJMSCorrelationID : chegou 2.3 [{}] ", jmsCorrelationID);
+        return this.receiveTextMessage(jmsCorrelationID);
     }
 
     public Message sendTextMessage(final String msg) throws JMSException {
@@ -175,8 +178,10 @@ public class SendReceiverService {
     }
 
 
-    public String receiveTextMessage(String selector) throws JMSException {
+    public String receiveTextMessage(String jmsCorrelationID) throws JMSException {
         log.info("sendAndReceiveTextMessage : chegou 2.4");
+        String selector = "JMSCorrelationID = '" + jmsCorrelationID + "'";
+        log.info("Selector: {}", selector);
         TextMessage resMessage = (TextMessage) this.receiveMessage(selector);
         log.info("sendAndReceiveTextMessage : chegou 2.5");
         return resMessage != null ? resMessage.getText() : null;
@@ -203,8 +208,8 @@ public class SendReceiverService {
         } else if (replyQueue == null) {
             throw new NullPointerException("Response queue can not be null!");
         } else {
-            log.info("receiveMessage(String selector) - 1 [{}] ", selector);
-            Message resMessage = myTemplate.receiveSelected(replyQueue, selector);
+            log.info("receiveMessage(String selector) - 1 [{}] ", getReplyQueue.getQueueName());
+            Message resMessage = myTemplate.receiveSelected(getReplyQueue, selector);
             log.info("receiveMessage(String selector) - 2 [{}] ", selector);
             if (log.isTraceEnabled()) {
                 log.trace("Response = {}", resMessage);
