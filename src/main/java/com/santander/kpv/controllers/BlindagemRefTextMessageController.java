@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.jms.JMSException;
+
 @RestController
 public class BlindagemRefTextMessageController {
 
@@ -16,7 +18,7 @@ public class BlindagemRefTextMessageController {
     }
 
     @GetMapping("/blindagemTextMessage")
-    String blindagem(@RequestParam(value = "cpf") String cpf) {
+    String blindagem(@RequestParam(value = "cpf") String cpf) throws JMSException {
         try {
             return enviaMensagem.enviaRecebeMensagens(cpf);
         } catch (JmsException ex) {
@@ -29,7 +31,7 @@ public class BlindagemRefTextMessageController {
     String blindagemSFH1(@RequestParam(value = "cpf") String cpf, @RequestParam(value = "sfh") String sfh) {
         try {
             return enviaMensagem.enviaRecebeMensagensSFH(cpf, sfh);
-        } catch (JmsException ex) {
+        } catch (JmsException | JMSException ex) {
             ex.printStackTrace();
             return "FAIL";
         }

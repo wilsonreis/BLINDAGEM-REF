@@ -13,6 +13,7 @@ import org.springframework.jms.annotation.EnableJms;
 import javax.jms.Destination;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
+import javax.jms.Session;
 
 @Configuration
 @EnableJms
@@ -83,7 +84,7 @@ public class MQTextMessageConfiguration {
             cf.setStringProperty(CustomMQConstants.WMQ_CHANNEL, getMqChannel());
             cf.setIntProperty(CustomMQConstants.WMQ_CONNECTION_MODE, 1);
             cf.setStringProperty(CustomMQConstants.WMQ_QUEUE_MANAGER, getMqQueueManager());
-            cf.setStringProperty(CustomMQConstants.WMQ_APPLICATIONNAME, "JmsPutGet (JMS)");
+            cf.setStringProperty(CustomMQConstants.WMQ_APPLICATIONNAME, "KPV.BLINDAGEM");
             cf.setBooleanProperty(CustomMQConstants.USER_AUTHENTICATION_MQCSP, true);
             cf.setStringProperty(CustomMQConstants.USERID, getUser());
             cf.setStringProperty(CustomMQConstants.PASSWORD, getPassword());
@@ -107,4 +108,8 @@ public class MQTextMessageConfiguration {
         return jmsContext.createQueue(getQueueResponse());
     }
 
+    @Bean("session")
+    public Session session(JmsConnectionFactory jmsConnectionFactory) throws JMSException {
+        return jmsConnectionFactory.createConnection().createSession();
+    }
 }

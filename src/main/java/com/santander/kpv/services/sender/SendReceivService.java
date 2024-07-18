@@ -53,6 +53,7 @@ public class SendReceivService {
             public Message createMessage(Session session) throws JMSException {
                 Message jmsmsg = session.createTextMessage(msg);
                 jmsmsg.setJMSCorrelationID(UUID.randomUUID().toString());
+                logger.info("JMSCorrelationID envio : "+  jmsmsg.getJMSCorrelationID());
                 jmsmsg.setJMSExpiration(jmsExpiration);
                 jmsmsg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
                 jmsmsg.setJMSReplyTo(session.createQueue(replyQueue));
@@ -67,6 +68,7 @@ public class SendReceivService {
             } else if (reply instanceof JMSTextMessage) {
                 logger.info("Reply is a text message, attempting to extract data");
                 JMSTextMessage txtReply = (JMSTextMessage) reply;
+                logger.info("JMSCorrelationID retorno : "+  txtReply.getJMSCorrelationID());
                 logger.info("Resultado final : sendo recebido pelo sender " + txtReply.getText());
                 return txtReply.getText();
             } else {

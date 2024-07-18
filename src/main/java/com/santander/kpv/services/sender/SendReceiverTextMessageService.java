@@ -2,6 +2,7 @@ package com.santander.kpv.services.sender;
 
 import javax.jms.DeliveryMode;
 
+import com.ibm.msg.client.jakarta.wmq.WMQConstants;
 import com.santander.kpv.exceptions.MyException;
 import com.santander.kpv.exceptions.MyRuntimeException;
 import com.santander.kpv.utils.StringUtils;
@@ -17,6 +18,7 @@ public class SendReceiverTextMessageService {
     private final JMSContext jmsContext;
     private final Destination queueRequest;
     private final Destination queueResponse;
+    private Session session;
 
     @Value("${ibm.mq.jmsExpiration}")
     private long jmsExpiration;
@@ -25,13 +27,14 @@ public class SendReceiverTextMessageService {
         this.jmsExpiration = jmsExpiration;
     }
 
-    public SendReceiverTextMessageService(JMSContext jmsContext, Destination queueRequest, Destination queueResponse) {
+    public SendReceiverTextMessageService(JMSContext jmsContext, Destination queueRequest, Destination queueResponse,Session session) {
         this.jmsContext = jmsContext;
         this.queueRequest = queueRequest;
         this.queueResponse = queueResponse;
+        this.session = session;
     }
 
-    public String enviaRecebeMensagensSFH(String cpf, String sfh) {
+    public String enviaRecebeMensagensSFH(String cpf, String sfh) throws JMSException {
         String sfhRetornado = StringUtils.getMensagem(cpf, sfh);
         log.info("sfhRetornado [{}]", sfhRetornado);
         if (sfhRetornado.length() < 5) {
@@ -40,8 +43,11 @@ public class SendReceiverTextMessageService {
         return enviaRecebeMensagens(sfhRetornado);
     }
 
-    public String enviaRecebeMensagens(String mensagem) {
+    public String enviaRecebeMensagens(String mensagem) throws JMSException {
         TextMessage message = jmsContext.createTextMessage(mensagem);
+        //TextMessage message = (TextMessage) session.createMessage();
+        //message.setIntProperty(
+        //       WMQConstants.WMQ_TARGET_CLIENT, WMQConstants.WMQ_CLIENT_NONJMS_MQ);
         String receivedMessage = "Erro ao receber mensagem";
         try {
             configureMessage(message);
@@ -55,11 +61,14 @@ public class SendReceiverTextMessageService {
     }
 
     private void configureMessage(TextMessage message) throws JMSException {
-        message.setJMSExpiration(jmsExpiration);
-        message.setJMSCorrelationID(UUID.randomUUID().toString());
-        log.info("setJMSCorrelationID(UUID.randomUUID().toString()) {}", message.getJMSCorrelationID());
-        message.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        message.setJMSReplyTo(queueResponse);
+        Message msg = (message) ;
+        msg.setJMSExpiration(jmsExpiration);
+        msg.setJMSCorrelationID(UUID.randomUUID().toString());
+        log.info("setJMSCorrelationID(UUID.randomUUID().toString()) {}", msg.getJMSCorrelationID());
+        msg.setJMSDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        msg.setJMSReplyTo(queueResponse);
+        msg.setIntProperty(
+                WMQConstants.WMQ_TARGET_CLIENT, WMQConstants.WMQ_CLIENT_NONJMS_MQ);
     }
 
     private void sendMessage(TextMessage message) throws JMSException {
@@ -72,6 +81,7 @@ public class SendReceiverTextMessageService {
         String receivedMessage;
         try {
             String messageSelector = "JMSCorrelationID = '" + message.getJMSCorrelationID() + "'";
+            System.out.println("messageSelector: " + messageSelector);
             JMSConsumer consumer = jmsContext.createConsumer(queueResponse, messageSelector);
             receivedMessage = consumer.receiveBody(String.class, 15000);
             if (receivedMessage == null) {
