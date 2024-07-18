@@ -3,6 +3,7 @@ package com.santander.kpv.config;
 
 import com.ibm.msg.client.jms.*;
 
+import com.ibm.msg.client.wmq.WMQConstants;
 import com.santander.kpv.exceptions.MyRuntimeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,20 +75,21 @@ public class MQTextMessageConfiguration {
         return mqChannel;
     }
 
-    @Bean("jmsConnectionFactory")
-    public JmsConnectionFactory jmsConnectionFactory() {
+    @Bean("myJmsConnectionFactory")
+    public JmsConnectionFactory myJmsConnectionFactory() {
         try {
-            JmsFactoryFactory jmsFactoryFactory = JmsFactoryFactory.getInstance(CustomMQConstants.WMQ_PROVIDER);
+            JmsFactoryFactory jmsFactoryFactory = JmsFactoryFactory.getInstance(WMQConstants.WMQ_PROVIDER);
             JmsConnectionFactory cf = jmsFactoryFactory.createConnectionFactory();
-            cf.setStringProperty(CustomMQConstants.WMQ_HOST_NAME, getMqHostName());
-            cf.setIntProperty(CustomMQConstants.WMQ_PORT, getMqPort());
-            cf.setStringProperty(CustomMQConstants.WMQ_CHANNEL, getMqChannel());
-            cf.setIntProperty(CustomMQConstants.WMQ_CONNECTION_MODE, 1);
-            cf.setStringProperty(CustomMQConstants.WMQ_QUEUE_MANAGER, getMqQueueManager());
-            cf.setStringProperty(CustomMQConstants.WMQ_APPLICATIONNAME, "KPV.BLINDAGEM");
-            cf.setBooleanProperty(CustomMQConstants.USER_AUTHENTICATION_MQCSP, true);
-            cf.setStringProperty(CustomMQConstants.USERID, getUser());
-            cf.setStringProperty(CustomMQConstants.PASSWORD, getPassword());
+            cf.setStringProperty(WMQConstants.WMQ_HOST_NAME, getMqHostName());
+            cf.setIntProperty(WMQConstants.WMQ_PORT, getMqPort());
+            cf.setStringProperty(WMQConstants.WMQ_CHANNEL, getMqChannel());
+            cf.setIntProperty(WMQConstants.WMQ_CONNECTION_MODE, 1);
+            cf.setStringProperty(WMQConstants.WMQ_QUEUE_MANAGER, getMqQueueManager());
+            cf.setIntProperty(WMQConstants.WMQ_CONNECTION_MODE, WMQConstants.WMQ_CM_BINDINGS_THEN_CLIENT);
+            cf.setStringProperty(WMQConstants.WMQ_APPLICATIONNAME, "KPV.BLINDAGEM");
+            cf.setBooleanProperty(WMQConstants.USER_AUTHENTICATION_MQCSP, true);
+            cf.setStringProperty(WMQConstants.USERID, getUser());
+            cf.setStringProperty(WMQConstants.PASSWORD, getPassword());
             return cf;
         } catch (JMSException e) {
             throw new MyRuntimeException(e);
@@ -95,8 +97,8 @@ public class MQTextMessageConfiguration {
     }
 
     @Bean("jmsContext")
-    public JMSContext jmsContext(JmsConnectionFactory jmsConnectionFactory){
-            return jmsConnectionFactory.createContext();
+    public JMSContext jmsContext(JmsConnectionFactory myJmsConnectionFactory){
+            return myJmsConnectionFactory.createContext();
     }
 
     @Bean("queueRequest")
@@ -109,7 +111,7 @@ public class MQTextMessageConfiguration {
     }
 
     @Bean("session")
-    public Session session(JmsConnectionFactory jmsConnectionFactory) throws JMSException {
-        return jmsConnectionFactory.createConnection().createSession();
+    public Session session(JmsConnectionFactory myJmsConnectionFactory) throws JMSException {
+        return myJmsConnectionFactory.createConnection().createSession();
     }
 }
